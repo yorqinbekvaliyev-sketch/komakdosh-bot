@@ -1,10 +1,10 @@
 import os
 import asyncio
+from aiohttp import web
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import CommandStart
 from google import genai
 
-# Токенларни сервер муҳитидан (Environment Variables) олади
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
@@ -57,8 +57,21 @@ async def chat_handler(message: types.Message):
         await message.answer("Узр, хабарни қайта ишлашда хатолик юз берди. Бироздан сўнг қайта уриниб кўринг.")
         print(f"Хатолик: {e}")
 
+async def handle_ping(request):
+    return web.Response(text="Bot is running!")
+
+async def start_web_server():
+    app = web.Application()
+    app.router.add_get("/", handle_ping)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    port = int(os.environ.get("PORT", 8080))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+
 async def main():
-    print("Бот муваффақиятли ишга тушди!")
+    await start_web_server()
+    print("Веб-сервер ва бот муваффақиятли ишга тушди!")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
